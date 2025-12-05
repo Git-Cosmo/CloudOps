@@ -215,7 +215,7 @@ class CloudOpsAction:
                 return version
         except Exception as e:
             logger.warning(f"Failed to fetch latest version: {e}. Using fallback version.")
-            return "1.6.6"
+            return "1.9.0"
     
     def install_azure_cli(self) -> None:
         """Install Azure CLI"""

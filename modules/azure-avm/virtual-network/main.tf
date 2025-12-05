@@ -26,10 +26,10 @@ resource "azurerm_subnet" "subnets" {
   virtual_network_name = azurerm_virtual_network.this.name
   address_prefixes     = [each.value.address_prefix]
 
-  service_endpoints = lookup(each.value, "service_endpoints", [])
+  service_endpoints = each.value.service_endpoints
   
   dynamic "delegation" {
-    for_each = lookup(each.value, "delegation", null) != null ? [each.value.delegation] : []
+    for_each = each.value.delegation != null ? [each.value.delegation] : []
     content {
       name = delegation.value.name
       service_delegation {

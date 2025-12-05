@@ -56,14 +56,14 @@ resource "aws_s3_bucket_lifecycle_configuration" "this" {
       status = rule.value.enabled ? "Enabled" : "Disabled"
 
       dynamic "expiration" {
-        for_each = lookup(rule.value, "expiration_days", null) != null ? [1] : []
+        for_each = rule.value.expiration_days != null ? [1] : []
         content {
           days = rule.value.expiration_days
         }
       }
 
       dynamic "transition" {
-        for_each = lookup(rule.value, "transitions", [])
+        for_each = rule.value.transitions
         content {
           days          = transition.value.days
           storage_class = transition.value.storage_class
