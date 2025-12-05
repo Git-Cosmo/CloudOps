@@ -10,7 +10,7 @@ import os
 import sys
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple
 
 # Import utility modules
 from utils import (
@@ -158,7 +158,7 @@ class CloudOpsAction:
                 self.aws_region
             )
 
-    def run_terraform_workflow(self) -> tuple[bool, str]:
+    def run_terraform_workflow(self) -> Tuple[bool, str]:
         """
         Run the Terraform workflow.
 

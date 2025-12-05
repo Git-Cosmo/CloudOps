@@ -6,7 +6,7 @@ Handles all Terraform-specific operations including init, fmt, validate, plan, a
 
 import logging
 from pathlib import Path
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Callable
 from .cli import run_command
 
 logger = logging.getLogger(__name__)
@@ -80,7 +80,7 @@ class TerraformOperations:
         logger.info("✓ Terraform validation passed")
 
     def plan(self, tf_vars: Optional[str] = None,
-             set_output_func: Optional[callable] = None) -> Tuple[bool, str]:
+             set_output_func: Optional[Callable[[str, str], None]] = None) -> Tuple[bool, str]:
         """
         Run terraform plan.
 
@@ -124,7 +124,7 @@ class TerraformOperations:
                 set_output_func('plan_outcome', 'failure')
             raise RuntimeError(f"Terraform plan failed: {result.stderr}")
 
-    def apply(self, set_output_func: Optional[callable] = None) -> None:
+    def apply(self, set_output_func: Optional[Callable[[str, str], None]] = None) -> None:
         """
         Run terraform apply.
 
