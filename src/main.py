@@ -2,6 +2,24 @@
 """
 CloudOps - Unified Terraform IaC Toolchain
 Main entrypoint for the GitHub Action
+
+This module provides the main orchestration logic for the CloudOps GitHub Action.
+It handles toolchain installation, cloud provider configuration, Terraform workflow
+execution, and integration with GitHub Actions features like PR comments and artifacts.
+
+Architecture:
+    The CloudOpsAction class follows a pipeline pattern with distinct phases:
+    1. Input validation and working directory resolution
+    2. Tool installation (Terraform, Azure CLI, AWS CLI, GitHub CLI)
+    3. Cloud provider authentication and configuration
+    4. Terraform workflow execution (init -> fmt -> validate -> plan -> apply)
+    5. Artifact management and PR integration
+
+Best Practices:
+    - All methods include comprehensive error handling
+    - Secrets are never logged or exposed
+    - Operations are idempotent where possible
+    - Clear logging for debugging and audit trails
 """
 
 import os

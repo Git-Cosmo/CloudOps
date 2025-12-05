@@ -1,0 +1,246 @@
+name: CI - Code Quality & Testing
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: read
+
+jobs:
+  lint-python:
+    name: Python Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pylint
+      
+      - name: Lint with flake8
+        run: |
+          # Stop the build if there are Python syntax errors or undefined names
+          flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          # Exit-zero treats all errors as warnings
+          flake8 src/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      
+      - name: Lint with pylint
+        run: |
+          pylint src/ --exit-zero --max-line-length=127
+
+  validate-yaml:
+    name: YAML Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install yamllint
+        run: pip install yamllint
+      
+      - name: Validate action.yml
+        run: python -c "import yaml; yaml.safe_load(open('action.yml'))"
+      
+      - name: Validate workflow YAML files
+        run: |
+          for file in .github/workflows/*.yml; do
+            echo "Validating $file"
+            python -c "import yaml; yaml.safe_load(open('$file'))"
+          done
+      
+      - name: Lint YAML files
+        run: yamllint -d relaxed .github/workflows/ action.yml
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pyyaml
+      
+      - name: Run unit tests
+        run: python tests/test_main.py
+      
+      - name: Test coverage check
+        run: |
+          pip install coverage
+          coverage run tests/test_main.py
+          coverage report --show-missing
+
+  terraform-validation:
+    name: Terraform Validation
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        example: [azure, aws]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: latest
+      
+      - name: Terraform fmt check
+        run: terraform fmt -check -recursive
+        working-directory: examples/${{ matrix.example }}
+      
+      - name: Terraform init (validation only)
+        run: terraform init -backend=false
+        working-directory: examples/${{ matrix.example }}
+      
+      - name: Terraform validate
+        run: terraform validate
+        working-directory: examples/${{ matrix.example }}
+
+  terraform-modules-validation:
+    name: Terraform Modules Validation
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        module: 
+          - azure-avm/virtual-network
+          - azure-avm/storage-account
+          - aws/vpc
+          - aws/s3-bucket
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: latest
+      
+      - name: Terraform fmt check
+        run: terraform fmt -check -recursive
+        working-directory: modules/${{ matrix.module }}
+      
+      - name: Terraform init (validation only)
+        run: terraform init -backend=false
+        working-directory: modules/${{ matrix.module }}
+      
+      - name: Terraform validate
+        run: terraform validate
+        working-directory: modules/${{ matrix.module }}
+
+  action-validation:
+    name: Action Metadata Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Validate action metadata
+        run: |
+          # Check if action.yml exists
+          if [ ! -f "action.yml" ]; then
+            echo "Error: action.yml not found"
+            exit 1
+          fi
+          
+          # Validate required fields
+          python -c "
+          import yaml
+          with open('action.yml') as f:
+              action = yaml.safe_load(f)
+          
+          required_fields = ['name', 'description', 'runs']
+          for field in required_fields:
+              if field not in action:
+                  print(f'Error: Required field {field} missing')
+                  exit(1)
+          
+          print('Action metadata validation passed')
+          "
+
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  markdown-lint:
+    name: Markdown Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Lint Markdown files
+        uses: DavidAnson/markdownlint-cli2-action@v18
+        with:
+          globs: '**/*.md'
+
+  all-checks:
+    name: All Checks Passed
+    runs-on: ubuntu-latest
+    needs: 
+      - lint-python
+      - validate-yaml
+      - unit-tests
+      - terraform-validation
+      - terraform-modules-validation
+      - action-validation
+      - security-scan
+      - markdown-lint
+    if: always()
+    steps:
+      - name: Check all jobs status
+        run: |
+          if [ "${{ needs.lint-python.result }}" != "success" ] || \
+             [ "${{ needs.validate-yaml.result }}" != "success" ] || \
+             [ "${{ needs.unit-tests.result }}" != "success" ] || \
+             [ "${{ needs.terraform-validation.result }}" != "success" ] || \
+             [ "${{ needs.terraform-modules-validation.result }}" != "success" ] || \
+             [ "${{ needs.action-validation.result }}" != "success" ] || \
+             [ "${{ needs.security-scan.result }}" != "success" ] || \
+             [ "${{ needs.markdown-lint.result }}" != "success" ]; then
+            echo "One or more checks failed"
+            exit 1
+          fi
+          echo "All checks passed!"

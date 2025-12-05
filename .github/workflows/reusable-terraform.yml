@@ -1,0 +1,94 @@
+name: Reusable Terraform Pipeline
+
+on:
+  workflow_call:
+    inputs:
+      cloud_provider:
+        description: 'Cloud provider (azure, aws, multi)'
+        required: true
+        type: string
+      tf_path:
+        description: 'Path to Terraform configuration'
+        required: true
+        type: string
+      terraform_operation:
+        description: 'Terraform operation (plan, apply, plan-apply)'
+        required: true
+        type: string
+      backend_config:
+        description: 'Backend configuration (key=value pairs)'
+        required: false
+        type: string
+        default: ''
+      artifact_name:
+        description: 'Name for the plan artifact'
+        required: false
+        type: string
+        default: 'tfplan'
+      artifact_retention_days:
+        description: 'Number of days to retain artifacts'
+        required: false
+        type: number
+        default: 30
+      enable_pr_comment:
+        description: 'Enable PR comment posting'
+        required: false
+        type: boolean
+        default: true
+      enable_artifact_upload:
+        description: 'Enable artifact upload'
+        required: false
+        type: boolean
+        default: true
+      tf_vars:
+        description: 'Terraform variables (key=value pairs)'
+        required: false
+        type: string
+        default: ''
+      environment:
+        description: 'GitHub environment for deployment protection'
+        required: false
+        type: string
+        default: ''
+    secrets:
+      azure_credentials:
+        description: 'Azure credentials JSON'
+        required: false
+      aws_access_key_id:
+        description: 'AWS Access Key ID'
+        required: false
+      aws_secret_access_key:
+        description: 'AWS Secret Access Key'
+        required: false
+
+jobs:
+  terraform:
+    name: Terraform ${{ inputs.terraform_operation }} (${{ inputs.cloud_provider }})
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment != '' && inputs.environment || null }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Run CloudOps Terraform Pipeline
+        uses: ./
+        with:
+          tf_path: ${{ inputs.tf_path }}
+          cloud_provider: ${{ inputs.cloud_provider }}
+          terraform_operation: ${{ inputs.terraform_operation }}
+          azure_credentials: ${{ secrets.azure_credentials }}
+          aws_access_key_id: ${{ secrets.aws_access_key_id }}
+          aws_secret_access_key: ${{ secrets.aws_secret_access_key }}
+          backend_config: ${{ inputs.backend_config }}
+          tf_vars: ${{ inputs.tf_vars }}
+          enable_pr_comment: ${{ inputs.enable_pr_comment }}
+          enable_artifact_upload: ${{ inputs.enable_artifact_upload }}
+      
+      - name: Upload plan artifact
+        uses: actions/upload-artifact@v4
+        if: success() && inputs.enable_artifact_upload == true
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: ${{ inputs.tf_path }}/tfplan
+          retention-days: ${{ inputs.artifact_retention_days }}
