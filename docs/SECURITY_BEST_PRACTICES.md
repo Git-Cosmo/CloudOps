@@ -242,9 +242,9 @@ Protection rules:
 ```hcl
 # Enable HTTPS only
 resource "azurerm_storage_account" "example" {
-  enable_https_traffic_only = true
-  min_tls_version          = "TLS1_2"
-  
+  https_traffic_only_enabled = true
+  min_tls_version            = "TLS1_2"
+
   # Disable public access
   allow_nested_items_to_be_public = false
   
