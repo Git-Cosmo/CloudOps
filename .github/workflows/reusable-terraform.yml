@@ -70,11 +70,11 @@ jobs:
       contents: read
       pull-requests: write
       id-token: write
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Run CloudOps Terraform Pipeline
         uses: ./
         with:
@@ -88,7 +88,7 @@ jobs:
           tf_vars: ${{ inputs.tf_vars }}
           enable_pr_comment: ${{ inputs.enable_pr_comment }}
           enable_artifact_upload: ${{ inputs.enable_artifact_upload }}
-      
+
       - name: Upload plan artifact
         uses: actions/upload-artifact@v4
         if: success() && inputs.enable_artifact_upload == true

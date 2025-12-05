@@ -10,67 +10,67 @@ inputs:
   tf_path:
     description: 'Path to Terraform root or main configuration (file or directory)'
     required: true
-  
+
   tf_working_dir:
     description: 'Terraform working directory. If not provided, derived from tf_path'
     required: false
     default: ''
-  
+
   cloud_provider:
     description: 'Cloud provider: azure, aws, or multi'
     required: false
     default: 'azure'
-  
+
   tf_version:
     description: 'Terraform version to install (e.g., 1.6.0, latest)'
     required: false
     default: 'latest'
-  
+
   gh_cli_version:
     description: 'GitHub CLI version to install (e.g., 2.40.0, latest)'
     required: false
     default: 'latest'
-  
+
   terraform_operation:
     description: 'Terraform operation: plan, apply, or plan-apply'
     required: false
     default: 'plan'
-  
+
   azure_credentials:
     description: 'Azure credentials JSON for authentication (SP credentials)'
     required: false
     default: ''
-  
+
   aws_access_key_id:
     description: 'AWS Access Key ID'
     required: false
     default: ''
-  
+
   aws_secret_access_key:
     description: 'AWS Secret Access Key'
     required: false
     default: ''
-  
+
   aws_region:
     description: 'AWS Region'
     required: false
     default: 'us-east-1'
-  
+
   backend_config:
     description: 'Additional backend configuration as key=value pairs (one per line)'
     required: false
     default: ''
-  
+
   tf_vars:
     description: 'Terraform variables as key=value pairs (one per line)'
     required: false
     default: ''
-  
+
   enable_pr_comment:
     description: 'Post plan summary as PR comment'
     required: false
     default: 'true'
-  
+
   enable_artifact_upload:
     description: 'Upload plan file as artifact'
     required: false
@@ -79,13 +79,13 @@ inputs:
 outputs:
   tf_working_dir:
     description: 'Resolved Terraform working directory'
-  
+
   plan_outcome:
     description: 'Outcome of terraform plan: success, failure, or changes'
-  
+
   apply_outcome:
     description: 'Outcome of terraform apply: success, failure, or skipped'
-  
+
   plan_artifact_path:
     description: 'Path to the generated plan file artifact'
 
@@ -96,13 +96,13 @@ runs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.12'
-    
+
     - name: Install Python dependencies
       shell: bash
       run: |
         python3 -m pip install --upgrade pip
         python3 -m pip install requests pyyaml
-    
+
     - name: Run CloudOps Terraform Pipeline
       shell: bash
       env:
