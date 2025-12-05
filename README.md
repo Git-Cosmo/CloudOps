@@ -261,6 +261,8 @@ backend "s3" {
 }
 ```
 
+📖 **For comprehensive security guidance, see [Security Best Practices](docs/SECURITY_BEST_PRACTICES.md)**
+
 ## 🎨 Pipeline Flow
 
 ```
@@ -298,26 +300,60 @@ backend "s3" {
 
 ```
 CloudOps/
-├── action.yml                 # GitHub Action definition
+├── action.yml                          # GitHub Action definition
 ├── src/
-│   └── main.py               # Python entrypoint
+│   ├── __init__.py                    # Package initialization
+│   └── main.py                        # Python entrypoint
 ├── modules/
-│   ├── azure-avm/            # Azure Verified Modules
+│   ├── azure-avm/                     # Azure Verified Modules
 │   │   ├── virtual-network/
 │   │   ├── storage-account/
 │   │   └── aks-cluster/
-│   └── aws/                  # AWS modules
+│   └── aws/                           # AWS modules
 │       ├── vpc/
 │       ├── s3-bucket/
 │       └── eks-cluster/
 ├── examples/
-│   ├── azure/                # Azure example configuration
-│   └── aws/                  # AWS example configuration
-└── .github/
-    └── workflows/
-        ├── example-azure.yml
-        └── example-aws.yml
+│   ├── azure/                         # Azure example configuration
+│   └── aws/                           # AWS example configuration
+├── .github/
+│   └── workflows/
+│       ├── reusable-terraform.yml     # Reusable workflow template
+│       ├── ci.yml                     # CI/CD validation pipeline
+│       ├── example-azure.yml          # Azure deployment example
+│       └── example-aws.yml            # AWS deployment example
+├── docs/
+│   ├── ENTERPRISE_ONBOARDING.md       # Enterprise setup guide
+│   ├── SECURITY_BEST_PRACTICES.md     # Security guidelines
+│   └── TROUBLESHOOTING.md             # Troubleshooting guide
+├── tests/
+│   └── test_main.py                   # Unit tests
+├── ARCHITECTURE.md                     # Architecture documentation
+├── CONTRIBUTING.md                     # Contribution guidelines
+├── SECURITY.md                         # Security policy
+├── REFACTOR_ANALYSIS.md               # DRY refactoring analysis
+└── CHANGELOG.md                        # Version history
 ```
+
+## 📚 Documentation
+
+### Quick Start
+- [README](README.md) - This file
+- [Quick Start Guide](QUICKSTART.md) - Get started in 5 minutes
+
+### Enterprise & Production
+- [Enterprise Onboarding](docs/ENTERPRISE_ONBOARDING.md) - Multi-environment setup, RBAC, compliance
+- [Security Best Practices](docs/SECURITY_BEST_PRACTICES.md) - Comprehensive security guidelines
+- [Troubleshooting Guide](docs/TROUBLESHOOTING.md) - Common issues and solutions
+
+### Development
+- [Architecture Documentation](ARCHITECTURE.md) - Design decisions and structure
+- [Contributing Guidelines](CONTRIBUTING.md) - How to contribute
+- [Refactor Analysis](REFACTOR_ANALYSIS.md) - DRY improvements and roadmap
+
+### Security & Compliance
+- [Security Policy](SECURITY.md) - Vulnerability reporting and security features
+- [Changelog](CHANGELOG.md) - Version history and updates
 
 ## 🤝 Contributing
 
@@ -328,6 +364,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ## 📝 License
 

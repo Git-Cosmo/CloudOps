@@ -6,11 +6,13 @@ on:
     paths:
       - 'examples/aws/**'
       - '.github/workflows/example-aws.yml'
+      - '.github/workflows/reusable-terraform.yml'
   push:
     branches: [main]
     paths:
       - 'examples/aws/**'
       - '.github/workflows/example-aws.yml'
+      - '.github/workflows/reusable-terraform.yml'
   workflow_dispatch:
 
 permissions:
@@ -21,53 +23,33 @@ permissions:
 jobs:
   terraform-plan:
     name: Terraform Plan (AWS)
-    runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Run CloudOps Terraform Pipeline
-        uses: ./
-        with:
-          tf_path: examples/aws
-          cloud_provider: aws
-          terraform_operation: plan
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_region: us-east-1
-          enable_pr_comment: true
-          enable_artifact_upload: true
-      
-      - name: Upload plan artifact
-        uses: actions/upload-artifact@v4
-        if: success()
-        with:
-          name: aws-tfplan
-          path: examples/aws/tfplan
-          retention-days: 30
+    uses: ./.github/workflows/reusable-terraform.yml
+    with:
+      cloud_provider: aws
+      tf_path: examples/aws
+      terraform_operation: plan
+      artifact_name: aws-tfplan
+      artifact_retention_days: 30
+      enable_pr_comment: true
+      enable_artifact_upload: true
+    secrets:
+      aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
   terraform-apply:
     name: Terraform Apply (AWS)
-    runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    environment: production
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Run CloudOps Terraform Pipeline
-        uses: ./
-        with:
-          tf_path: examples/aws
-          cloud_provider: aws
-          terraform_operation: apply
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_region: us-east-1
-          backend_config: |
-            bucket=my-terraform-state-bucket
-            key=aws-example.tfstate
-            region=us-east-1
+    uses: ./.github/workflows/reusable-terraform.yml
+    with:
+      cloud_provider: aws
+      tf_path: examples/aws
+      terraform_operation: apply
+      environment: production
+      backend_config: |
+        bucket=my-terraform-state-bucket
+        key=aws-example.tfstate
+        region=us-east-1
+    secrets:
+      aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

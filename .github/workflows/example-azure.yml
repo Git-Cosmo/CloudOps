@@ -6,11 +6,13 @@ on:
     paths:
       - 'examples/azure/**'
       - '.github/workflows/example-azure.yml'
+      - '.github/workflows/reusable-terraform.yml'
   push:
     branches: [main]
     paths:
       - 'examples/azure/**'
       - '.github/workflows/example-azure.yml'
+      - '.github/workflows/reusable-terraform.yml'
   workflow_dispatch:
 
 permissions:
@@ -21,50 +23,32 @@ permissions:
 jobs:
   terraform-plan:
     name: Terraform Plan (Azure)
-    runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Run CloudOps Terraform Pipeline
-        uses: ./
-        with:
-          tf_path: examples/azure
-          cloud_provider: azure
-          terraform_operation: plan
-          azure_credentials: ${{ secrets.AZURE_CREDENTIALS }}
-          enable_pr_comment: true
-          enable_artifact_upload: true
-      
-      - name: Upload plan artifact
-        uses: actions/upload-artifact@v4
-        if: success()
-        with:
-          name: azure-tfplan
-          path: examples/azure/tfplan
-          retention-days: 30
+    uses: ./.github/workflows/reusable-terraform.yml
+    with:
+      cloud_provider: azure
+      tf_path: examples/azure
+      terraform_operation: plan
+      artifact_name: azure-tfplan
+      artifact_retention_days: 30
+      enable_pr_comment: true
+      enable_artifact_upload: true
+    secrets:
+      azure_credentials: ${{ secrets.AZURE_CREDENTIALS }}
 
   terraform-apply:
     name: Terraform Apply (Azure)
-    runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    environment: production
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Run CloudOps Terraform Pipeline
-        uses: ./
-        with:
-          tf_path: examples/azure
-          cloud_provider: azure
-          terraform_operation: apply
-          azure_credentials: ${{ secrets.AZURE_CREDENTIALS }}
-          backend_config: |
-            resource_group_name=terraform-state-rg
-            storage_account_name=tfstateaccount
-            container_name=tfstate
-            key=azure-example.tfstate
+    uses: ./.github/workflows/reusable-terraform.yml
+    with:
+      cloud_provider: azure
+      tf_path: examples/azure
+      terraform_operation: apply
+      environment: production
+      backend_config: |
+        resource_group_name=terraform-state-rg
+        storage_account_name=tfstateaccount
+        container_name=tfstate
+        key=azure-example.tfstate
+    secrets:
+      azure_credentials: ${{ secrets.AZURE_CREDENTIALS }}
