@@ -213,32 +213,6 @@ class CloudOpsAction:
             logger.info("Skipping apply (no changes or not requested)")
             self.github.set_output('apply_outcome', 'skipped')
 
-    def format_plan_comment(self, plan_output: str) -> str:
-        """
-        Format plan output for PR comment (compatibility wrapper for tests).
-
-        Args:
-            plan_output: Terraform plan output
-
-        Returns:
-            Formatted markdown comment
-        """
-        return self.github._format_plan_comment(
-            plan_output,
-            self.resolved_working_dir,
-            Path(self.github_workspace)
-        )
-
-    def set_output(self, name: str, value: str) -> None:
-        """
-        Set GitHub Actions output (compatibility wrapper for tests).
-
-        Args:
-            name: Output name
-            value: Output value
-        """
-        self.github.set_output(name, value)
-
     def run(self) -> int:
         """Main execution flow"""
         try:
