@@ -1,0 +1,124 @@
+name: 'CloudOps - Unified Terraform IaC Toolchain'
+description: 'Zero-setup Terraform CI/CD pipeline for Azure and AWS with embedded module catalogs'
+author: 'CloudOps Team'
+
+branding:
+  icon: 'cloud'
+  color: 'blue'
+
+inputs:
+  tf_path:
+    description: 'Path to Terraform root or main configuration (file or directory)'
+    required: true
+  
+  tf_working_dir:
+    description: 'Terraform working directory. If not provided, derived from tf_path'
+    required: false
+    default: ''
+  
+  cloud_provider:
+    description: 'Cloud provider: azure, aws, or multi'
+    required: false
+    default: 'azure'
+  
+  tf_version:
+    description: 'Terraform version to install (e.g., 1.6.0, latest)'
+    required: false
+    default: 'latest'
+  
+  gh_cli_version:
+    description: 'GitHub CLI version to install (e.g., 2.40.0, latest)'
+    required: false
+    default: 'latest'
+  
+  terraform_operation:
+    description: 'Terraform operation: plan, apply, or plan-apply'
+    required: false
+    default: 'plan'
+  
+  azure_credentials:
+    description: 'Azure credentials JSON for authentication (SP credentials)'
+    required: false
+    default: ''
+  
+  aws_access_key_id:
+    description: 'AWS Access Key ID'
+    required: false
+    default: ''
+  
+  aws_secret_access_key:
+    description: 'AWS Secret Access Key'
+    required: false
+    default: ''
+  
+  aws_region:
+    description: 'AWS Region'
+    required: false
+    default: 'us-east-1'
+  
+  backend_config:
+    description: 'Additional backend configuration as key=value pairs (one per line)'
+    required: false
+    default: ''
+  
+  tf_vars:
+    description: 'Terraform variables as key=value pairs (one per line)'
+    required: false
+    default: ''
+  
+  enable_pr_comment:
+    description: 'Post plan summary as PR comment'
+    required: false
+    default: 'true'
+  
+  enable_artifact_upload:
+    description: 'Upload plan file as artifact'
+    required: false
+    default: 'true'
+
+outputs:
+  tf_working_dir:
+    description: 'Resolved Terraform working directory'
+  
+  plan_outcome:
+    description: 'Outcome of terraform plan: success, failure, or changes'
+  
+  apply_outcome:
+    description: 'Outcome of terraform apply: success, failure, or skipped'
+  
+  plan_artifact_path:
+    description: 'Path to the generated plan file artifact'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    
+    - name: Install Python dependencies
+      shell: bash
+      run: |
+        python3 -m pip install --upgrade pip
+        python3 -m pip install requests pyyaml
+    
+    - name: Run CloudOps Terraform Pipeline
+      shell: bash
+      env:
+        INPUT_TF_PATH: ${{ inputs.tf_path }}
+        INPUT_TF_WORKING_DIR: ${{ inputs.tf_working_dir }}
+        INPUT_CLOUD_PROVIDER: ${{ inputs.cloud_provider }}
+        INPUT_TF_VERSION: ${{ inputs.tf_version }}
+        INPUT_GH_CLI_VERSION: ${{ inputs.gh_cli_version }}
+        INPUT_TERRAFORM_OPERATION: ${{ inputs.terraform_operation }}
+        INPUT_AZURE_CREDENTIALS: ${{ inputs.azure_credentials }}
+        INPUT_AWS_ACCESS_KEY_ID: ${{ inputs.aws_access_key_id }}
+        INPUT_AWS_SECRET_ACCESS_KEY: ${{ inputs.aws_secret_access_key }}
+        INPUT_AWS_REGION: ${{ inputs.aws_region }}
+        INPUT_BACKEND_CONFIG: ${{ inputs.backend_config }}
+        INPUT_TF_VARS: ${{ inputs.tf_vars }}
+        INPUT_ENABLE_PR_COMMENT: ${{ inputs.enable_pr_comment }}
+        INPUT_ENABLE_ARTIFACT_UPLOAD: ${{ inputs.enable_artifact_upload }}
+        GITHUB_TOKEN: ${{ github.token }}
+      run: python3 ${{ github.action_path }}/src/main.py

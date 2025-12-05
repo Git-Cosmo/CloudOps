@@ -1,0 +1,70 @@
+name: Azure Terraform Deployment
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'examples/azure/**'
+      - '.github/workflows/example-azure.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'examples/azure/**'
+      - '.github/workflows/example-azure.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+jobs:
+  terraform-plan:
+    name: Terraform Plan (Azure)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Run CloudOps Terraform Pipeline
+        uses: ./
+        with:
+          tf_path: examples/azure
+          cloud_provider: azure
+          terraform_operation: plan
+          azure_credentials: ${{ secrets.AZURE_CREDENTIALS }}
+          enable_pr_comment: true
+          enable_artifact_upload: true
+      
+      - name: Upload plan artifact
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: azure-tfplan
+          path: examples/azure/tfplan
+          retention-days: 30
+
+  terraform-apply:
+    name: Terraform Apply (Azure)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Run CloudOps Terraform Pipeline
+        uses: ./
+        with:
+          tf_path: examples/azure
+          cloud_provider: azure
+          terraform_operation: apply
+          azure_credentials: ${{ secrets.AZURE_CREDENTIALS }}
+          backend_config: |
+            resource_group_name=terraform-state-rg
+            storage_account_name=tfstateaccount
+            container_name=tfstate
+            key=azure-example.tfstate
