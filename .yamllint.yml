@@ -1,0 +1,42 @@
+---
+# yamllint configuration for CloudOps
+
+extends: default
+
+rules:
+  # Line length - relaxed for workflow files
+  line-length:
+    max: 150
+    level: warning
+
+  # Allow multiple spaces after colons (for alignment)
+  colons:
+    max-spaces-after: -1
+
+  # Indentation
+  indentation:
+    spaces: 2
+    indent-sequences: true
+
+  # Allow empty values
+  empty-values:
+    forbid-in-block-mappings: false
+    forbid-in-flow-mappings: false
+
+  # Comments
+  comments:
+    min-spaces-from-content: 1
+
+  # Document start
+  document-start:
+    present: false
+
+  # Truthy values
+  truthy:
+    allowed-values: ['true', 'false', 'yes', 'no', 'on', 'off']
+    check-keys: false
+
+ignore: |
+  .github/
+  node_modules/
+  .terraform/

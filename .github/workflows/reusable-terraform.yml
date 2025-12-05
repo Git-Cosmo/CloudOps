@@ -66,6 +66,10 @@ jobs:
     name: Terraform ${{ inputs.terraform_operation }} (${{ inputs.cloud_provider }})
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment != '' && inputs.environment || null }}
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
     
     steps:
       - name: Checkout repository
